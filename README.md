@@ -34,8 +34,8 @@ This project analyzes transcriptomic data from experimental evolution studies of
 ## Usage
 
 1. Place your input files in `data/raw/`:
-   - `Book1.csv` - Gene list of interest
-   - `data.csv` - Transcriptomic data
+   - `metabolic_genes.csv` - Gene list of interest
+   - `file.csv` - Transcriptomic data
    - Additional study files as needed
 
 2. Run the pipeline in order:
