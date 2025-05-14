@@ -24,17 +24,105 @@ filtered_df.to_csv(output_file_path, index=False)
 print(f"Filtered data saved to {output_file_path}")
 
 
-##### Merge the filtered data of the different studies using R 
+##### Compute log2FC, P- value and Q value of the filtered data the using R 
+# load the libraries
 
+library(statmod)
+library(limma)
+
+
+# Load your count matrix and metadata
+count_data <- read.csv("filter_genes1.csv", row.names = 1)
+metadata <- read.csv("meta_data.csv", row.names = 1)
+
+
+# Read the metadata CSV file into a data frame
+metadata <- read.csv("meta_data.csv", header = TRUE, stringsAsFactors = TRUE)
+
+
+metadata$gene <-factor(metadata$gene)
+metadata$Condition <- factor(metadata$Condition)
+
+
+design <- model.matrix(~ gene + Condition, data = metadata)
+
+
+# Ensure the column names of the count matrix match the row names of the metadata
+all(colnames(count_data) == rownames(metadata))  # Should return TRUE
+
+
+design <- model.matrix(~ gene * Condition, data = metadata)
+
+
+
+metadata$Condition <- factor(make.names(metadata$Condition))
+levels(metadata$Condition)
+
+design <- model.matrix(~0 + Condition, data = metadata)
+colnames(design) <- levels(metadata$Condition)  # Ensure valid names
+
+contrast.matrix <- makeContrasts(
+  AMX = Treatment_AMX - Control_AMX,
+  CEF = Treatment_CEF - Control_CEF,
+  CFT = Treatment_CFT - Control_CFT,
+  CIP = Treatment_CIP - Control_CIP,
+  COT = Treatment_COT - Control_COT,
+  DAP = Treatment_DAP - Control_DAP,
+  IMI = Treatment_IMI - Control_IMI,
+  KAN = Treatment_KAN - Control_KAN,
+  LIN = Treatment_LIN - Control_LIN,
+  LVX = Treatment_LVX - Control_LVX,
+  MOX = Treatment_MOX - Control_MOX,
+  PEN = Treatment_PEN - Control_PEN,
+  RIF = Treatment_RIF - Control_RIF,
+  TET = Treatment_TET - Control_TET,
+  TOB = Treatment_TOB - Control_TOB,
+  VNC = Treatment_VNC - Control_VNC,
+  levels = design
+)
+
+
+fit <- lmFit(count_data, design)
+fit2 <- contrasts.fit(fit, contrast.matrix)
+fit2 <- eBayes(fit2)
+results <- topTable(fit2, coef="AMX", adjust="fdr", number=Inf)  # Example for AMX
+
+
+# Create a list to store results
+results_list <- list()
+
+# Extract results for each antibiotic and store them
+for (antibiotic in colnames(contrast.matrix)) {
+  results_list[[antibiotic]] <- topTable(fit2, coef = antibiotic, adjust = "fdr", number = Inf)
+  
+  # Save each result as a CSV file
+  write.csv(results_list[[antibiotic]], file = paste0("DEG_results_", antibiotic, ".csv"))
+}
+
+# Print summary
+print("Differential expression analysis completed. Results saved as CSV files.")
+
+# Combine all results into one data frame
+all_results_filtered_genes1 <- do.call(rbind, lapply(names(results_list), function(antibiotic) {
+  df <- results_list[[antibiotic]]
+  df$Antibiotic <- antibiotic  # Add antibiotic as a new column
+  return(df)
+}))
+
+# Ensure logFC and p-value columns are present
+all_results_filtered_genes1$logP <- -log10(all_results$P-Value)
+
+
+###### Merge log2FC, P- value and Q value of the filtered data of the different studies using R
 # Load necessary libraries
 library(dplyr)
 library(tidyr)
 
 # Load the first CSV file
-df1 <- read.csv("Filtered data1.csv")
+df1 <- read.csv("all_results_filtered_genes1.csv")
 
 # Load the second CSV file
-df2 <- read.csv("Filtered data2.csv")
+df2 <- read.csv("all_results_filtered_genes2.csv")
 
 
 # Melt the first dataframe to long format
