@@ -1,4 +1,4 @@
-# Metabolic genes expression of E. coli bacteria under the experimental evolution assay with different antibiotics
+# Metabolic genes expression of E. coli under the experimental evolution assay with different antibiotics
 
 ## Project Description
 This project analyzes transcriptomic data from experimental evolution studies of E. coli under antibiotic selection pressure. The workflow processes data from multiple studies to identify consistent gene expression changes associated with antibiotic resistance development.
