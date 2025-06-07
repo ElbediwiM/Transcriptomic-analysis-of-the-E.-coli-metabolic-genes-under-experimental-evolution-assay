@@ -4,8 +4,6 @@ library(clusterProfiler)
 library(ggrepel)
 library(circlize)
 
-
-
 # Load the data
 data <- read.csv("combined_data_wide_format.csv")
 
